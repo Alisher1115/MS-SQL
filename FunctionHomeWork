@@ -89,20 +89,20 @@ GO
 --5.	Функцию, которая принимает в качестве параметра двухразрядное число и определяет какой из разрядов больше,
 --либо они равны (используйте % - деление по модулю. Например, 57%10=7).
 CREATE FUNCTION TwoDigitNumber(@num int)
-RETURNS INT 
+RETURNS INT
 BEGIN	
 DECLARE @temp INT = 0
-IF (@num > 99)--RAISERROR('Input Two Digit Number!',0,1)
 SET @temp = @num % 10
 SET @num = @num / 10
---IF(@temp > @num) --BEGIN RETURN @temp END	--RAISERROR('%d > %d',0,1, @temp, @num)
---ELSE IF(@temp < @num) --BEGIN RETURN @num END --RAISERROR('%d < %d',0,1, @temp, @num) 
---ELSE -- RAISERROR('%d == %d',0,1, @temp, @num) 
+IF(@temp < @num) set @temp = @num  
+if (@temp = @num) return 0
 RETURN @temp 
 END 
 GO
-DROP FUNCTION dbo.TwoDigitNumber
-GO
-DECLARE @Max INT = 84
-EXECUTE @Max = dbo.TwoDigitNumber @Max 
-RAISERROR('Large: %d',0,1, @Max)
+drop function TwoDigitNumber
+go 
+DECLARE @Max INT = 44
+DECLARE @temp INT = @Max
+EXECUTE @temp = dbo.TwoDigitNumber @temp 
+IF (@temp = 0)RAISERROR('Both digits are equally',0,1)
+else RAISERROR('Large: %d in %d',0,1, @temp, @Max)
