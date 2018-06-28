@@ -1,34 +1,40 @@
---Пользовательские функций
---use ProceduresTest
-create function ScalarFunction_(@firstnum int, @secondnum int)
-returns int
-as
-begin
-if (@firstnum < @secondnum)
-Declare @n int
-Set @n =  @firstnum + @secondnum
-return @n
-else 
-return 0
-end
-
-
-Declare @val int = 0
-Execute @val = ScalarFunction_ 2,5
-raiserror('val: ',0,1, @val)
-
-select [Corp\chert].ScalarFunction_ (2,5)as Val
-
-create function PlainOneQueryFunction
-(@name nvarchar(50))
-returns uniqueidentifier
-as
-begin
-Declare @id uniqueidentifier
-select @id = id from books where name = @name
-return @id
-end
-
-select dbo.PlainOneQueryFunction ('asd') as id
-
-select * from [dbo].[PlainOneQueryOlegFunction1] ('asd')as id
+--3.	Функцию, возвращающую список книг, отвечающих набору критериев 
+--(например, название книги, тематика, категория, издательство),
+--и отсортированный по номеру поля, указанному в 5-м параметре, в направлении, указанном в 6-м параметре.
+CREATE FUNCTION PagesThemeCategoryPriceSortByFieldNumAndDirection(@Page int, @Theme NVARCHAR(50), @Category NVARCHAR(50), @Price MONEY,  @Field NVARCHAR(50), @Dir VARCHAR(10))
+RETURNS @Table TABLE (Book NVARCHAR(255), Pages int, Theme NVARCHAR(255), Category NVARCHAR(255), Price MONEY, Press NVARCHAR(255))
+AS 
+BEGIN 
+DECLARE @TempTable TABLE (Book NVARCHAR(255), Pages int, Theme NVARCHAR(255), Category NVARCHAR(255), Price MONEY, Press NVARCHAR(255))
+INSERT @TempTable
+SELECT b.NAME Book, b.Pages, t.name Theme, c.name Category, b.Price Price, p.NAME Press 
+FROM dbo.books b, dbo.press p, dbo.themes t, dbo.category c 
+WHERE b.Id_press = p.id AND b.Id_theme = t.id AND	b.id_category = c.id 
+AND b.Pages > @Page AND t.name = @Theme AND	c.name = @Category AND b.Price < @Price
+IF(@Field = 'Book')
+BEGIN 
+	IF (@Dir = 'ASC')INSERT @Table SELECT * FROM @TempTable ORDER BY Book ASC
+	ELSE INSERT @Table SELECT * FROM @TempTable ORDER BY Book DESC
+END	
+ELSE IF	(@Field = 'Pages')
+BEGIN 
+	IF (@Dir = 'ASC')INSERT @Table SELECT * FROM @TempTable ORDER BY Pages ASC
+	ELSE INSERT @Table SELECT * FROM @TempTable ORDER BY Pages DESC
+END	
+ELSE IF	(@Field ='Price')
+BEGIN 
+	IF (@Dir = 'ASC')INSERT @Table SELECT * FROM @TempTable ORDER BY Price ASC
+	ELSE INSERT @Table SELECT * FROM @TempTable ORDER BY Price DESC
+END	
+ELSE IF	(@Field = 'Press')
+BEGIN 
+	IF (@Dir = 'ASC')INSERT @Table SELECT * FROM @TempTable ORDER BY Press ASC
+	ELSE INSERT @Table SELECT * FROM @TempTable ORDER BY Press DESC
+END	
+RETURN
+END	
+GO 
+Declare @Page INT = 100, @Theme NVARCHAR(50) = 'Программирование', @Category NVARCHAR(50) = 'Visual Basic', @Price MONEY = 300,
+@FieldN NVARCHAR(50) = 'Pages', @Dir VARCHAR(10) = 'DESC'
+SELECT * FROM PagesThemeCategoryPriceSortByFieldNumAndDirection (@Page, @Theme, @Category, @Price, @FieldN, @Dir)
+GO 
